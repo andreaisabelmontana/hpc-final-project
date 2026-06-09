@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HPC Final Project — Built From Scratch</title>
+<meta name="description" content="An original from-scratch build: a high-performance computing capstone that takes a real, slow workload and makes it fly across many cores and nodes — profiling, parallelising, and proving the speedup." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --accent:#9333ea; --accent-soft:#f3e9fc; --ink:#1c1228; --muted:#594d68;
+    --line:#e6daf5; --bg:#fbf9fe; --card:#ffffff;
+    --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 28px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);padding:.1em .4em;border-radius:4px;color:#7e22ce}
+  h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.15;letter-spacing:-.01em}
+  header.hero{padding:88px 0 56px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 22px}
+  h1{font-size:clamp(2.6rem,6vw,4.1rem);margin:0 0 18px}
+  .lede{font-size:1.22rem;color:var(--muted);max-width:62ch;margin:0 0 28px}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;font-size:.82rem}
+  .chip{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted);background:var(--card)}
+  section{padding:54px 0;border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  h2{font-size:clamp(1.7rem,3.4vw,2.3rem);margin:0 0 20px}
+  h3{font-size:1.2rem;margin:0 0 6px}
+  p{margin:0 0 18px;max-width:68ch}
+  .muted{color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:8px}
+  .tool{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .tool .t{font-family:var(--mono);font-size:.78rem;color:var(--accent);letter-spacing:.04em;margin-bottom:8px}
+  .tool h3{font-size:1.05rem;font-family:var(--sans);font-weight:600;margin-bottom:6px}
+  .tool p{font-size:.92rem;color:var(--muted);margin:0}
+  ol.flow{counter-reset:s;list-style:none;padding:0;margin:24px 0 0}
+  ol.flow li{position:relative;padding:18px 0 18px 56px;border-top:1px solid var(--line)}
+  ol.flow li:before{counter-increment:s;content:counter(s,decimal-leading-zero);position:absolute;left:0;top:18px;font-family:var(--mono);font-size:.8rem;color:var(--accent);border:1px solid var(--line);border-radius:8px;width:38px;height:38px;display:grid;place-items:center;background:var(--card)}
+  ol.flow li h3{font-family:var(--sans);font-size:1.02rem;font-weight:600;margin:0 0 4px}
+  ol.flow li p{margin:0;font-size:.93rem;color:var(--muted)}
+  .callout{background:var(--accent-soft);border:1px solid #d7c2f0;border-radius:14px;padding:24px 26px;margin-top:8px}
+  .callout p:last-child{margin:0}
+  ul.learn{list-style:none;padding:0;margin:8px 0 0}
+  ul.learn li{padding:14px 0 14px 30px;border-top:1px solid var(--line);position:relative;color:var(--muted);max-width:68ch}
+  ul.learn li:before{content:"→";position:absolute;left:0;color:var(--accent);font-family:var(--mono)}
+  ul.learn li b{color:var(--ink);font-weight:600}
+  .price{display:flex;align-items:baseline;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 26px;margin-top:8px}
+  .price .n{font-family:var(--serif);font-size:2.6rem;color:var(--accent);line-height:1}
+  .price .l{color:var(--muted);font-size:.95rem}
+  footer{padding:48px 0 80px}
+  .credit{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
+  .credit .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  footer .fine{font-size:.8rem;color:var(--muted);margin-top:22px;text-align:center}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">From-Scratch Build · High-Performance Computing</p>
+    <h1>HPC Final Project</h1>
+    <p class="lede">Take a computation that takes hours and make it take minutes — not by writing cleverer maths, but by spreading the work across every core and node you can reach. This capstone profiles a real, slow workload, parallelises it, and measures the speedup honestly. I rebuilt it from scratch because HPC is where you learn that the bottleneck is never where you assumed.</p>
+    <div class="meta">
+      <span class="chip">C / C++</span><span class="chip">OpenMP</span><span class="chip">MPI</span>
+      <span class="chip">Profiling</span><span class="chip">Scaling</span><span class="chip">Slurm</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">What it is</p>
+    <h2>Making a real workload fly</h2>
+    <p>The whole project hangs on one discipline: measure before you optimise. It starts with a working but slow program, profiles it to find where the time actually goes, and then attacks that hotspot with parallelism — shared-memory threads within a node, message passing across nodes, and the scheduling glue to run it all on a cluster.</p>
+    <p>What makes it a proper capstone is that it ends in <i>evidence</i>. Not "it feels faster" but scaling curves: how runtime falls as you add cores, where the speedup plateaus, and why. That gap between ideal and actual speedup is the entire lesson of high-performance computing.</p>
+    <div class="price">
+      <div class="n">Amdahl</div>
+      <div class="l">the law that haunts every parallel project — your speedup is capped by the part you couldn't parallelise.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">The stack</p>
+    <h2>From slow serial to scaled parallel</h2>
+    <p class="muted">The tools of parallelism, plus the measurement that keeps them honest.</p>
+    <div class="grid">
+      <div class="tool"><div class="t">measure</div><h3>Profiling</h3><p>Find the true hotspot before touching anything — intuition about bottlenecks is almost always wrong.</p></div>
+      <div class="tool"><div class="t">shared memory</div><h3>OpenMP</h3><p>Parallelise across the cores of a single node with threads, the lowest-friction first win.</p></div>
+      <div class="tool"><div class="t">distributed</div><h3>MPI</h3><p>Pass messages between processes across many nodes when one machine isn't enough.</p></div>
+      <div class="tool"><div class="t">schedule</div><h3>Slurm</h3><p>Submit and manage jobs on the cluster — request nodes, cores and time, then run at scale.</p></div>
+      <div class="tool"><div class="t">analyse</div><h3>Scaling study</h3><p>Plot strong and weak scaling to see how performance grows with resources — and where it stops.</p></div>
+      <div class="tool"><div class="t">verify</div><h3>Correctness checks</h3><p>A fast wrong answer is worthless; confirm the parallel result matches the serial baseline.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Architecture</p>
+    <h2>How the speedup is earned</h2>
+    <p>The work follows the cardinal HPC discipline — measure, change one thing, measure again:</p>
+    <ol class="flow">
+      <li><h3>Baseline</h3><p>Get a correct serial version and time it as the reference point.</p></li>
+      <li><h3>Profile</h3><p>Locate the hotspot consuming most of the runtime.</p></li>
+      <li><h3>Parallelise</h3><p>Apply OpenMP within nodes and MPI across them, targeting that hotspot.</p></li>
+      <li><h3>Scale</h3><p>Run on the cluster via Slurm at increasing core counts.</p></li>
+      <li><h3>Report</h3><p>Produce scaling curves and explain the gap to ideal speedup.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Reflection</p>
+    <h2>What rebuilding it taught me</h2>
+    <ul class="learn">
+      <li><b>Profile first, always.</b> The hotspot is never where you guessed; optimising the wrong loop is wasted effort.</li>
+      <li><b>Amdahl's law is undefeated.</b> The serial fraction you can't parallelise sets a hard ceiling — no number of cores breaks it.</li>
+      <li><b>Communication is the tax.</b> Across nodes, the cost of moving data often eats the gain from splitting the work.</li>
+      <li><b>Correctness comes first.</b> A parallel bug — a race condition — produces a fast, confidently wrong answer.</li>
+      <li><b>Evidence beats intuition.</b> The scaling curve, not a stopwatch feeling, is what tells you whether you actually won.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="credit">
+      <div class="k">About this build</div>
+      <p style="margin:0">An original, from-scratch build by <b>Andrea</b> — written to learn parallel computing as a capstone: profiling, OpenMP and MPI, cluster scheduling with Slurm, and rigorous strong/weak scaling analysis. Plain HTML/CSS, deployed on GitHub Pages.</p>
+    </div>
+    <p class="fine">Built from scratch by Andrea · one of an ongoing series of learning builds.</p>
+  </div>
+</footer>
+</body>
+</html>
