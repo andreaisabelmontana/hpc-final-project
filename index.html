@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>HPC Final Project — Built From Scratch</title>
-<meta name="description" content="An original from-scratch build: a high-performance computing capstone that takes a real, slow workload and makes it fly across many cores and nodes — profiling, parallelising, and proving the speedup." />
+<title>HPC Final Project — Mandelbrot, parallelised and measured</title>
+<meta name="description" content="A high-performance-computing capstone: take the Mandelbrot escape-time render, optimise it with NumPy, parallelise it across CPU cores with multiprocessing, and prove the speedup with a real strong-scaling study — profiling, speedup and efficiency curves, single-node honest scope." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -17,42 +17,47 @@
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:860px;margin:0 auto;padding:0 28px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 28px}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
   code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);padding:.1em .4em;border-radius:4px;color:#7e22ce}
   h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.15;letter-spacing:-.01em}
   header.hero{padding:88px 0 56px;border-bottom:1px solid var(--line)}
   .eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 22px}
-  h1{font-size:clamp(2.6rem,6vw,4.1rem);margin:0 0 18px}
-  .lede{font-size:1.22rem;color:var(--muted);max-width:62ch;margin:0 0 28px}
+  h1{font-size:clamp(2.4rem,5.4vw,3.7rem);margin:0 0 18px}
+  .lede{font-size:1.18rem;color:var(--muted);max-width:64ch;margin:0 0 28px}
   .meta{display:flex;flex-wrap:wrap;gap:10px;font-size:.82rem}
   .chip{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted);background:var(--card)}
   section{padding:54px 0;border-bottom:1px solid var(--line)}
   .kicker{font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
   h2{font-size:clamp(1.7rem,3.4vw,2.3rem);margin:0 0 20px}
   h3{font-size:1.2rem;margin:0 0 6px}
-  p{margin:0 0 18px;max-width:68ch}
+  p{margin:0 0 18px;max-width:70ch}
   .muted{color:var(--muted)}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:8px}
   .tool{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
   .tool .t{font-family:var(--mono);font-size:.78rem;color:var(--accent);letter-spacing:.04em;margin-bottom:8px}
   .tool h3{font-size:1.05rem;font-family:var(--sans);font-weight:600;margin-bottom:6px}
   .tool p{font-size:.92rem;color:var(--muted);margin:0}
+  figure{margin:8px 0 0}
+  figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:14px;background:var(--card);display:block}
+  figcaption{font-size:.84rem;color:var(--muted);margin-top:10px;text-align:center}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.two{grid-template-columns:1fr}}
+  table{border-collapse:collapse;width:100%;margin-top:8px;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:8px 12px;text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:var(--accent-soft);color:#7e22ce;font-family:var(--mono);font-weight:500;font-size:.8rem;letter-spacing:.03em}
+  tbody tr:nth-child(even){background:#faf6fe}
+  pre{background:#1c1228;color:#e9def7;border-radius:14px;padding:18px 20px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.5}
+  pre .c{color:#b388e8}
+  .callout{background:var(--accent-soft);border:1px solid #d7c2f0;border-radius:14px;padding:22px 24px;margin-top:8px}
+  .callout p:last-child{margin:0}
   ol.flow{counter-reset:s;list-style:none;padding:0;margin:24px 0 0}
   ol.flow li{position:relative;padding:18px 0 18px 56px;border-top:1px solid var(--line)}
   ol.flow li:before{counter-increment:s;content:counter(s,decimal-leading-zero);position:absolute;left:0;top:18px;font-family:var(--mono);font-size:.8rem;color:var(--accent);border:1px solid var(--line);border-radius:8px;width:38px;height:38px;display:grid;place-items:center;background:var(--card)}
   ol.flow li h3{font-family:var(--sans);font-size:1.02rem;font-weight:600;margin:0 0 4px}
   ol.flow li p{margin:0;font-size:.93rem;color:var(--muted)}
-  .callout{background:var(--accent-soft);border:1px solid #d7c2f0;border-radius:14px;padding:24px 26px;margin-top:8px}
-  .callout p:last-child{margin:0}
-  ul.learn{list-style:none;padding:0;margin:8px 0 0}
-  ul.learn li{padding:14px 0 14px 30px;border-top:1px solid var(--line);position:relative;color:var(--muted);max-width:68ch}
-  ul.learn li:before{content:"→";position:absolute;left:0;color:var(--accent);font-family:var(--mono)}
-  ul.learn li b{color:var(--ink);font-weight:600}
-  .price{display:flex;align-items:baseline;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 26px;margin-top:8px}
-  .price .n{font-family:var(--serif);font-size:2.6rem;color:var(--accent);line-height:1}
-  .price .l{color:var(--muted);font-size:.95rem}
   footer{padding:48px 0 80px}
   .credit{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
   .credit .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
@@ -63,70 +68,107 @@
 <header class="hero">
   <div class="wrap">
     <p class="eyebrow">From-Scratch Build · High-Performance Computing</p>
-    <h1>HPC Final Project</h1>
-    <p class="lede">Take a computation that takes hours and make it take minutes — not by writing cleverer maths, but by spreading the work across every core and node you can reach. This capstone profiles a real, slow workload, parallelises it, and measures the speedup honestly. I rebuilt it from scratch because HPC is where you learn that the bottleneck is never where you assumed.</p>
+    <h1>Mandelbrot, parallelised and measured</h1>
+    <p class="lede">Take one genuinely compute-heavy workload — escape-time rendering of the Mandelbrot set — and make it fly: profile the hotspot, vectorise it with NumPy, spread it across CPU cores with <code>multiprocessing</code>, and then <i>prove</i> the speedup with a real strong-scaling study. All four implementations return the same pixels; every speedup is a measured win, not a changed answer.</p>
     <div class="meta">
-      <span class="chip">C / C++</span><span class="chip">OpenMP</span><span class="chip">MPI</span>
-      <span class="chip">Profiling</span><span class="chip">Scaling</span><span class="chip">Slurm</span>
+      <span class="chip">Python 3.12</span><span class="chip">NumPy</span><span class="chip">multiprocessing</span>
+      <span class="chip">numba (opt)</span><span class="chip">cProfile</span><span class="chip">Strong scaling</span>
     </div>
   </div>
 </header>
 
 <section>
   <div class="wrap">
-    <p class="kicker">What it is</p>
-    <h2>Making a real workload fly</h2>
-    <p>The whole project hangs on one discipline: measure before you optimise. It starts with a working but slow program, profiles it to find where the time actually goes, and then attacks that hotspot with parallelism — shared-memory threads within a node, message passing across nodes, and the scheduling glue to run it all on a cluster.</p>
-    <p>What makes it a proper capstone is that it ends in <i>evidence</i>. Not "it feels faster" but scaling curves: how runtime falls as you add cores, where the speedup plateaus, and why. That gap between ideal and actual speedup is the entire lesson of high-performance computing.</p>
-    <div class="price">
-      <div class="n">Amdahl</div>
-      <div class="l">the law that haunts every parallel project — your speedup is capped by the part you couldn't parallelise.</div>
-    </div>
+    <p class="kicker">The output</p>
+    <h2>What it computes</h2>
+    <p>For every pixel <code>c</code> of a complex-plane grid, iterate <code>z → z² + c</code> until <code>|z| &gt; 2</code> and record how many steps it took. That iteration count is the image. The workload is embarrassingly parallel — pixels are independent — but the per-pixel cost is wildly uneven (points inside the set run the full budget), which is what makes the scaling honest rather than trivially linear.</p>
+    <figure>
+      <img src="figures/mandelbrot.png" alt="Mandelbrot render — a zoom into the seahorse-valley boundary, rendered with the parallel kernel" />
+      <figcaption>800×800, max_iter=1000, a zoom into the seahorse-valley boundary — rendered with the parallel kernel, identical pixel-for-pixel to the naive reference.</figcaption>
+    </figure>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <p class="kicker">The stack</p>
-    <h2>From slow serial to scaled parallel</h2>
-    <p class="muted">The tools of parallelism, plus the measurement that keeps them honest.</p>
+    <p class="kicker">The implementations</p>
+    <h2>Four ways to render the same image</h2>
+    <p class="muted">Same input, same output array (verified), increasing speed.</p>
     <div class="grid">
-      <div class="tool"><div class="t">measure</div><h3>Profiling</h3><p>Find the true hotspot before touching anything — intuition about bottlenecks is almost always wrong.</p></div>
-      <div class="tool"><div class="t">shared memory</div><h3>OpenMP</h3><p>Parallelise across the cores of a single node with threads, the lowest-friction first win.</p></div>
-      <div class="tool"><div class="t">distributed</div><h3>MPI</h3><p>Pass messages between processes across many nodes when one machine isn't enough.</p></div>
-      <div class="tool"><div class="t">schedule</div><h3>Slurm</h3><p>Submit and manage jobs on the cluster — request nodes, cores and time, then run at scale.</p></div>
-      <div class="tool"><div class="t">analyse</div><h3>Scaling study</h3><p>Plot strong and weak scaling to see how performance grows with resources — and where it stops.</p></div>
-      <div class="tool"><div class="t">verify</div><h3>Correctness checks</h3><p>A fast wrong answer is worthless; confirm the parallel result matches the serial baseline.</p></div>
+      <div class="tool"><div class="t">reference</div><h3>naive</h3><p>A pure-Python double loop over pixels. Correct and readable, and the baseline everything is timed and checked against.</p></div>
+      <div class="tool"><div class="t">vectorised</div><h3>numpy</h3><p>One NumPy pass over the whole grid — Python-interpreter overhead paid once per iteration, not once per pixel.</p></div>
+      <div class="tool"><div class="t">parallel</div><h3>multiprocessing</h3><p>Split the rows into bands, run the NumPy kernel per band in its own process, stitch the bands back together.</p></div>
+      <div class="tool"><div class="t">optional JIT</div><h3>numba</h3><p>An <code>@njit(parallel=True)</code> kernel, enabled automatically if numba is installed. In-process threads, no spawn cost.</p></div>
     </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <p class="kicker">Architecture</p>
-    <h2>How the speedup is earned</h2>
-    <p>The work follows the cardinal HPC discipline — measure, change one thing, measure again:</p>
-    <ol class="flow">
-      <li><h3>Baseline</h3><p>Get a correct serial version and time it as the reference point.</p></li>
-      <li><h3>Profile</h3><p>Locate the hotspot consuming most of the runtime.</p></li>
-      <li><h3>Parallelise</h3><p>Apply OpenMP within nodes and MPI across them, targeting that hotspot.</p></li>
-      <li><h3>Scale</h3><p>Run on the cluster via Slurm at increasing core counts.</p></li>
-      <li><h3>Report</h3><p>Produce scaling curves and explain the gap to ideal speedup.</p></li>
-    </ol>
+    <p class="kicker">Profile first</p>
+    <h2>The hotspot is exactly where you'd hope</h2>
+    <p><code>cProfile</code> on the naive kernel is unambiguous: essentially <b>100% of the time is the per-pixel escape loop</b> in <code>mandelbrot_naive</code> — which is precisely the function the other three kernels replace.</p>
+    <pre>   ncalls  tottime  cumtime  filename:lineno(function)
+        1    0.588    0.588  hpc/mandelbrot.py:80(<span class="c">mandelbrot_naive</span>)
+        2    0.000    0.000  numpy/function_base.py:24(linspace)
+<span class="c">&gt;&gt;&gt; Hotspot (most self-time): mandelbrot_naive</span></pre>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <p class="kicker">Reflection</p>
-    <h2>What rebuilding it taught me</h2>
-    <ul class="learn">
-      <li><b>Profile first, always.</b> The hotspot is never where you guessed; optimising the wrong loop is wasted effort.</li>
-      <li><b>Amdahl's law is undefeated.</b> The serial fraction you can't parallelise sets a hard ceiling — no number of cores breaks it.</li>
-      <li><b>Communication is the tax.</b> Across nodes, the cost of moving data often eats the gain from splitting the work.</li>
-      <li><b>Correctness comes first.</b> A parallel bug — a race condition — produces a fast, confidently wrong answer.</li>
-      <li><b>Evidence beats intuition.</b> The scaling curve, not a stopwatch feeling, is what tells you whether you actually won.</li>
-    </ul>
+    <p class="kicker">The evidence</p>
+    <h2>Strong-scaling study — real numbers</h2>
+    <p>Fix the problem size (800×800, <code>max_iter=1000</code>), increase the worker processes, take the best of 3 runs after a warmup. Measured on a 16-core machine. <code>speedup = T(1)/T(p)</code>, <code>efficiency = speedup/p</code>.</p>
+    <table>
+      <thead><tr><th>workers</th><th>time (s)</th><th>speedup</th><th>efficiency</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>23.867</td><td>1.00x</td><td>100.0%</td></tr>
+        <tr><td>2</td><td>15.256</td><td>1.56x</td><td>78.2%</td></tr>
+        <tr><td>4</td><td>13.838</td><td>1.72x</td><td>43.1%</td></tr>
+        <tr><td>8</td><td>10.507</td><td>2.27x</td><td>28.4%</td></tr>
+        <tr><td>16</td><td>8.652</td><td>2.76x</td><td>17.2%</td></tr>
+      </tbody>
+    </table>
+    <div class="two" style="margin-top:22px">
+      <figure><img src="figures/speedup.png" alt="Strong-scaling speedup curve: measured speedup well below the ideal linear line" /><figcaption>Speedup vs. ideal linear.</figcaption></figure>
+      <figure><img src="figures/efficiency.png" alt="Parallel efficiency curve dropping from 100% toward 17% as cores increase" /><figcaption>Efficiency falls as cores grow.</figcaption></figure>
+    </div>
+    <div class="callout" style="margin-top:24px">
+      <p><b>Read honestly.</b> The speedup is real (2.76x on 16 cores) but plainly sub-linear, and efficiency collapses as cores are added. That's Amdahl's law: the fixed overhead of <i>this</i> setup — spawning processes, pickling each result band back, the final concatenation — is work a fast NumPy kernel finishes in seconds, so more processes hit diminishing returns fast. On Windows the only portable start method is <code>spawn</code>, whose per-process cost is high, which is why the knee comes early.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Head to head</p>
+    <h2>Where the speed actually comes from</h2>
+    <p class="muted">Same 400×400 view, max_iter=400, all four kernels.</p>
+    <table>
+      <thead><tr><th>kernel</th><th>time (s)</th><th>vs naive</th></tr></thead>
+      <tbody>
+        <tr><td>naive (pure Python)</td><td>8.074</td><td>1.0x</td></tr>
+        <tr><td>numpy (vectorised)</td><td>2.220</td><td>3.6x</td></tr>
+        <tr><td>parallel (16 cores)</td><td>2.529</td><td>3.2x</td></tr>
+        <tr><td>numba (JIT, threads)</td><td>0.008</td><td>1021x</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px">The honest punchline: <b>vectorisation is the big win</b>. At this size the multiprocessing version barely matches single-process NumPy — spawn overhead eats the gain — and only pulls ahead on the larger scaling instance above. Numba's in-process JIT avoids all process overhead and wins by three orders of magnitude: the right tool when you can use it.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Scope</p>
+    <h2>Single node, honestly — and how it reaches MPI</h2>
+    <p>This is a <b>single-node, multi-core</b> study. A real cluster with many machines and MPI is out of scope for one laptop — so the page doesn't claim it. But the decomposition used here <i>is</i> the distributed one, and the jump is mechanical:</p>
+    <ol class="flow">
+      <li><h3>Domain decomposition</h3><p>Give MPI rank <code>r</code> of <code>n</code> its slice of rows — the same split this code already does.</p></li>
+      <li><h3>No halo exchange</h3><p>Pixels are independent, so unlike a stencil or PDE solver there is zero communication during compute — only the final gather.</p></li>
+      <li><h3>Gather</h3><p>Replace the process-pool map and concatenate with an MPI <code>Gatherv</code> onto rank 0.</p></li>
+      <li><h3>The real ceiling</h3><p>Communication is cheap (one gather); load imbalance isn't — an equal-rows split hands some ranks mostly-interior, expensive rows. A serious version would deal out smaller chunks dynamically.</p></li>
+    </ol>
   </div>
 </section>
 
@@ -134,7 +176,7 @@
   <div class="wrap">
     <div class="credit">
       <div class="k">About this build</div>
-      <p style="margin:0">An original, from-scratch build by <b>Andrea</b> — written to learn parallel computing as a capstone: profiling, OpenMP and MPI, cluster scheduling with Slurm, and rigorous strong/weak scaling analysis. Plain HTML/CSS, deployed on GitHub Pages.</p>
+      <p style="margin:0">An original, from-scratch build by <b>Andrea</b> — a high-performance-computing capstone in Python: profiling with cProfile, vectorising with NumPy, parallelising with multiprocessing (and optional numba), and a rigorous strong-scaling study with real speedup and efficiency numbers. Every figure and table on this page comes from a real run on a 16-core machine. Code and tests in the repo; this page is plain HTML/CSS on GitHub Pages.</p>
     </div>
     <p class="fine">Built from scratch by Andrea · one of an ongoing series of learning builds.</p>
   </div>
