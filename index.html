@@ -62,6 +62,15 @@
   .credit{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
   .credit .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
   footer .fine{font-size:.8rem;color:var(--muted);margin-top:22px;text-align:center}
+  /* coursework project grid */
+  .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:12px;margin-top:14px}
+  .proj-card{display:flex;flex-direction:column;gap:4px;padding:13px 15px;border:1px solid var(--line);
+    border-radius:14px;background:var(--card);box-shadow:0 1px 2px rgba(28,18,40,.04);transition:box-shadow .2s,transform .2s}
+  .proj-card:hover{box-shadow:0 8px 24px rgba(147,51,234,.12);transform:translateY(-2px);text-decoration:none}
+  .proj-card b{font-family:var(--serif);font-weight:600;color:var(--ink);font-size:15px}
+  .proj-card span{color:var(--muted);font-size:13px;line-height:1.45}
+  .proj-card::after{content:'live ↗';font-size:11px;color:var(--accent);margin-top:3px;letter-spacing:.04em}
+  .proj-card.src::after{content:'source ↗'}
 </style>
 </head>
 <body>
@@ -169,6 +178,24 @@
       <li><h3>Gather</h3><p>Replace the process-pool map and concatenate with an MPI <code>Gatherv</code> onto rank 0.</p></li>
       <li><h3>The real ceiling</h3><p>Communication is cheap (one gather); load imbalance isn't — an equal-rows split hands some ranks mostly-interior, expensive rows. A serious version would deal out smaller chunks dynamically.</p></li>
     </ol>
+  </div>
+</section>
+
+<section id="coursework">
+  <div class="wrap">
+    <p class="kicker">Coursework</p>
+    <h2>🧪 Coursework — projects I built</h2>
+    <p class="muted">The interactive material above is the theory; these are the standalone apps and tools I built for the course.</p>
+    <div class="proj-grid">
+      <a class="proj-card" href="https://andreaisabelmontana.github.io/dalio-uncorrelated-returns-rebuild/" target="_blank" rel="noopener"><b>Dalio Uncorrelated Returns Rebuild</b><span>Uncorrelated-return portfolios: correlation clustering, inverse-vol, risk parity</span></a>
+      <a class="proj-card" href="https://andreaisabelmontana.github.io/hpc-miniweather/" target="_blank" rel="noopener"><b>HPC MiniWeather</b><span>In-browser HPC stencil simulation</span></a>
+      <a class="proj-card" href="https://andreaisabelmontana.github.io/mini-hpc/" target="_blank" rel="noopener"><b>Mini HPC</b><span>Submit jobs, watch them schedule across cluster workers</span></a>
+      <a class="proj-card" href="https://andreaisabelmontana.github.io/miniSWE/" target="_blank" rel="noopener"><b>miniSWE</b><span>Parallel 2D shallow-water solver with OpenMP threading</span></a>
+      <a class="proj-card" href="https://andreaisabelmontana.github.io/montecarlo-gpu/" target="_blank" rel="noopener"><b>Montecarlo GPU</b><span>GPU-accelerated Monte Carlo risk engine, 192x CUDA speedup</span></a>
+      <a class="proj-card" href="https://andreaisabelmontana.github.io/gpu-montecarlo-risk-rebuild/" target="_blank" rel="noopener"><b>GPU Montecarlo Risk Rebuild</b><span>GPU Monte Carlo risk engine</span></a>
+      <a class="proj-card" href="https://andreaisabelmontana.github.io/uncorrelated-returns/" target="_blank" rel="noopener"><b>Uncorrelated Returns</b><span>Diversification portfolio optimizer</span></a>
+      <a class="proj-card" href="https://andreaisabelmontana.github.io/time-series-momentum-rebuild/" target="_blank" rel="noopener"><b>Time Series Momentum Rebuild</b><span>Cross-asset momentum backtester</span></a>
+    </div>
   </div>
 </section>
 
