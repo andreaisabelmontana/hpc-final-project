@@ -139,3 +139,18 @@ smaller row-chunks dynamically to balance the uneven per-pixel cost.
 
 Python 3.12, NumPy, `multiprocessing`, matplotlib, optional numba; pytest for
 the test suite. No external services.
+
+## Coursework — projects I built
+
+Hands-on apps and tools I built for the High-Performance Computing course:
+
+- [HPC MiniWeather](https://andreaisabelmontana.github.io/hpc-miniweather/) — interactive in-browser MiniWeather stencil simulation
+- [Mini HPC](https://andreaisabelmontana.github.io/mini-hpc/) — submit jobs, watch them schedule across cluster workers
+- [miniSWE](https://andreaisabelmontana.github.io/miniSWE/) — parallel 2D shallow-water solver with OpenMP threading
+- [Montecarlo GPU](https://andreaisabelmontana.github.io/montecarlo-gpu/) — GPU-accelerated Monte Carlo risk engine, 192x CUDA speedup
+- [GPU Montecarlo Risk Rebuild](https://andreaisabelmontana.github.io/gpu-montecarlo-risk-rebuild/) — multi-backend Monte Carlo VaR/CVaR: serial, OpenMP, CUDA
+- [Uncorrelated Returns](https://andreaisabelmontana.github.io/uncorrelated-returns/) — combine independent return streams to cut portfolio risk
+- [Time Series Momentum Rebuild](https://andreaisabelmontana.github.io/time-series-momentum-rebuild/) — vol-scaled cross-asset trend-following backtester
+- [Dalio Uncorrelated Returns Rebuild](https://andreaisabelmontana.github.io/dalio-uncorrelated-returns-rebuild/) — correlation clustering, inverse-vol and risk parity
+- [AIMES E-Manager](https://andreaisabelmontana.github.io/aimes-emanager/) — pilot-job execution manager placing tasks across supercomputers
+- [HPC Course](https://andreaisabelmontana.github.io/hpc-course/) — hands-on Slurm, OpenMP, MPI, CUDA and performance tuning
