@@ -71,6 +71,31 @@
   .proj-card span{color:var(--muted);font-size:13px;line-height:1.45}
   .proj-card::after{content:'live ↗';font-size:11px;color:var(--accent);margin-top:3px;letter-spacing:.04em}
   .proj-card.src::after{content:'source ↗'}
+  /* amdahl calculator */
+  .calc{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px}
+  .calc-controls{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px}
+  @media(max-width:640px){.calc-controls{grid-template-columns:1fr}}
+  .ctl{display:flex;flex-direction:column;gap:7px}
+  .ctl-check{grid-column:1/-1;flex-direction:row;align-items:center;gap:10px}
+  .ctl-check input{width:16px;height:16px;accent-color:var(--accent)}
+  .ctl-row{display:flex;justify-content:space-between;align-items:baseline;font-size:.92rem}
+  .ctl-row b{font-family:var(--mono);font-size:.95rem;color:var(--accent)}
+  .ctl-hint{font-size:.78rem;color:var(--muted)}
+  .calc input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:999px;background:var(--line);outline:none}
+  .calc input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--card);box-shadow:0 1px 3px rgba(147,51,234,.4)}
+  .calc input[type=range]::-moz-range-thumb{width:18px;height:18px;border:2px solid var(--card);border-radius:50%;background:var(--accent);cursor:pointer}
+  .calc-readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0 6px}
+  .stat{background:var(--accent-soft);border:1px solid #d7c2f0;border-radius:12px;padding:13px 15px}
+  .stat-k{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:#7e22ce;margin-bottom:5px}
+  .stat-v{font-family:var(--serif);font-size:1.5rem;color:var(--ink);line-height:1}
+  #amdahlCanvas{width:100%;height:auto;margin-top:16px;display:block;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .calc-leg{font-size:.8rem;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+  .calc-leg .sw{display:inline-block;width:22px;height:0;border-top-width:3px;border-top-style:solid;margin-right:4px;vertical-align:middle}
+  .sw-a{border-top-color:var(--accent)}
+  .sw-g{border-top-color:#0ea5a4}
+  .sw-i{border-top-color:#b8a4d4;border-top-style:dashed}
+  .sw-c{border-top-color:#c026d3;border-top-style:dotted}
+  .sw-m{border-top:0;width:12px;height:12px;border-radius:50%;background:#ea580c;margin-right:4px}
 </style>
 </head>
 <body>
@@ -203,6 +228,53 @@ return np.vstack(results)                            <span class="c"># re-stack,
   </div>
 </section>
 
+<section id="amdahl-calc">
+  <div class="wrap">
+    <p class="kicker">Try the model</p>
+    <h2>Interactive: the speedup ceiling, by hand</h2>
+    <p>The two laws above are worth <i>playing</i> with. Set a serial fraction <code>s</code> and a worker count <code>p</code>, and this calculator draws the Amdahl speedup curve <code>S(p) = 1 / (s + (1 − s)/p)</code> — with its hard ceiling <code>1/s</code> marked — and reads off speedup and efficiency at your chosen <code>p</code>. It's the <b>general textbook model</b>, not a measurement of this project: it answers "what does theory permit?", whereas the table above is what actually happened. The one real data point — <b>2.76× on 16 workers</b> — is plotted as a single marker so you can see how far measured reality sits below any clean curve.</p>
+    <div class="callout" style="margin-top:8px">
+      <p style="margin:0"><b>Honesty note.</b> Everything in this panel is a <i>hypothetical</i> driven by the <code>s</code> you pick — the serial fraction of this workload was never measured, so no curve here is a claim about it. Only the labelled <code>2.76× @ 16</code> dot is real. Try <code>s = 0.05</code>, <code>p = 16</code> to reproduce the page's illustrative <code>≈ 9.14×</code>; the asymptote <code>1/s</code> shows the ceiling no number of cores can beat.</p>
+    </div>
+
+    <div class="calc">
+      <div class="calc-controls">
+        <label class="ctl">
+          <span class="ctl-row"><span>Serial fraction <code>s</code></span><b id="sVal">0.050</b></span>
+          <input id="sIn" type="range" min="0" max="1" step="0.005" value="0.05" />
+          <span class="ctl-hint">0 = perfectly parallel · 1 = entirely serial</span>
+        </label>
+        <label class="ctl">
+          <span class="ctl-row"><span>Workers <code>p</code></span><b id="pVal">16</b></span>
+          <input id="pIn" type="range" min="1" max="64" step="1" value="16" />
+          <span class="ctl-hint">processors / processes thrown at the fixed problem</span>
+        </label>
+        <label class="ctl ctl-check">
+          <input id="gIn" type="checkbox" />
+          <span>Overlay Gustafson scaled speedup <code>S = p − s(p − 1)</code></span>
+        </label>
+      </div>
+
+      <div class="calc-readout">
+        <div class="stat"><div class="stat-k">Amdahl speedup S(p)</div><div class="stat-v" id="rS">9.14×</div></div>
+        <div class="stat"><div class="stat-k">Efficiency E = S/p</div><div class="stat-v" id="rE">57.1%</div></div>
+        <div class="stat"><div class="stat-k">Ceiling 1/s (p→∞)</div><div class="stat-v" id="rC">20.0×</div></div>
+        <div class="stat" id="rGwrap" hidden><div class="stat-k">Gustafson S(p)</div><div class="stat-v" id="rG">15.25×</div></div>
+      </div>
+
+      <canvas id="amdahlCanvas" width="820" height="420" role="img"
+        aria-label="Speedup versus worker count: the Amdahl curve flattening toward its 1/s ceiling, the ideal linear line, and the single real measured point at 2.76 times on 16 workers."></canvas>
+      <p class="calc-leg muted">
+        <span class="sw sw-a"></span> Amdahl S(p)
+        <span class="sw sw-g" id="legG" hidden></span><span id="legGt" hidden>Gustafson S(p)</span>
+        <span class="sw sw-i"></span> ideal (linear, s=0)
+        <span class="sw sw-c"></span> ceiling 1/s
+        <span class="sw sw-m"></span> measured: 2.76× @ 16 (this project)
+      </p>
+    </div>
+  </div>
+</section>
+
 <section>
   <div class="wrap">
     <p class="kicker">Head to head</p>
@@ -264,5 +336,120 @@ return np.vstack(results)                            <span class="c"># re-stack,
     <p class="fine">Built from scratch by Andrea · one of an ongoing series of learning builds.</p>
   </div>
 </footer>
+
+<script>
+(function(){
+  // --- Core model (verified: s=0 -> p; s=1 -> 1; p->inf -> 1/s; E=S/p; s=0.05,p=16 -> 9.142857) ---
+  function amdahl(s, p){ return 1 / (s + (1 - s) / p); }      // S(p) = 1/(s + (1-s)/p)
+  function gustafson(s, p){ return p - s * (p - 1); }          // scaled speedup, s = serial fraction
+  function eff(S, p){ return S / p; }                          // efficiency E = S/p
+
+  var P_MAX = 64;
+  var MEAS = { p: 16, s: 2.76 };  // the one real measured data point (this project)
+
+  var sIn = document.getElementById('sIn'), pIn = document.getElementById('pIn'), gIn = document.getElementById('gIn');
+  var sVal = document.getElementById('sVal'), pVal = document.getElementById('pVal');
+  var rS = document.getElementById('rS'), rE = document.getElementById('rE'), rC = document.getElementById('rC');
+  var rG = document.getElementById('rG'), rGwrap = document.getElementById('rGwrap');
+  var legG = document.getElementById('legG'), legGt = document.getElementById('legGt');
+  var cv = document.getElementById('amdahlCanvas'), ctx = cv.getContext('2d');
+
+  function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  function draw(s, p, showG){
+    var W = cv.width, H = cv.height, padL = 56, padR = 18, padT = 18, padB = 40;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    ctx.clearRect(0,0,W,H);
+
+    // y-axis upper bound: cover ideal line, the ceiling (clamped), and the measured point
+    var ceil = s > 0 ? 1/s : P_MAX;
+    var yMax = Math.max(P_MAX, Math.min(ceil, P_MAX) , MEAS.s) ;
+    yMax = Math.ceil(Math.max(P_MAX, Math.min(ceil === Infinity ? P_MAX : ceil, P_MAX)) / 8) * 8;
+    if (yMax < 8) yMax = 8;
+
+    var X = function(pp){ return padL + (pp - 1) / (P_MAX - 1) * plotW; };
+    var Y = function(v){ return padT + plotH - (v / yMax) * plotH; };
+
+    // grid + axes
+    ctx.strokeStyle = css('--line'); ctx.fillStyle = css('--muted');
+    ctx.lineWidth = 1; ctx.font = "11px 'JetBrains Mono', monospace"; ctx.textBaseline = 'middle';
+    var ticks = [8,16,24,32,40,48,56,64];
+    ctx.textAlign = 'center';
+    ticks.forEach(function(t){
+      var x = X(t);
+      ctx.globalAlpha = .5; ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT+plotH); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.fillText(String(t), x, padT+plotH+14);
+    });
+    ctx.fillText('workers  p', padL + plotW/2, H - 8);
+    ctx.textAlign = 'right';
+    for (var yv=0; yv<=yMax; yv+=8){
+      var y = Y(yv);
+      ctx.globalAlpha = .5; ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+plotW, y); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.fillText(String(yv), padL-8, y);
+    }
+    ctx.save(); ctx.translate(14, padT+plotH/2); ctx.rotate(-Math.PI/2);
+    ctx.textAlign='center'; ctx.fillText('speedup  S', 0, 0); ctx.restore();
+
+    // ideal linear (s=0 -> S=p)
+    ctx.strokeStyle = '#b8a4d4'; ctx.setLineDash([5,5]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(1), Y(1)); ctx.lineTo(X(P_MAX), Y(Math.min(P_MAX, yMax))); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ceiling 1/s (only meaningful for s>0 and within view)
+    if (s > 0 && ceil <= yMax){
+      ctx.strokeStyle = '#c026d3'; ctx.setLineDash([2,4]); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(X(1), Y(ceil)); ctx.lineTo(X(P_MAX), Y(ceil)); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#c026d3'; ctx.textAlign='left'; ctx.textBaseline='bottom';
+      ctx.fillText('1/s = ' + ceil.toFixed(1) + '×', X(1)+6, Y(ceil)-2);
+      ctx.textBaseline='middle';
+    }
+
+    // Gustafson overlay
+    if (showG){
+      ctx.strokeStyle = '#0ea5a4'; ctx.lineWidth = 2; ctx.beginPath();
+      for (var pp=1; pp<=P_MAX; pp++){ var v = gustafson(s, pp); (pp===1?ctx.moveTo:ctx.lineTo).call(ctx, X(pp), Y(Math.min(v, yMax))); }
+      ctx.stroke();
+    }
+
+    // Amdahl curve
+    ctx.strokeStyle = css('--accent'); ctx.lineWidth = 2.5; ctx.beginPath();
+    for (var q=1; q<=P_MAX; q++){ var a = amdahl(s, q); (q===1?ctx.moveTo:ctx.lineTo).call(ctx, X(q), Y(Math.min(a, yMax))); }
+    ctx.stroke();
+
+    // marker for selected p on the Amdahl curve
+    var Sp = amdahl(s, p), spx = X(p), spy = Y(Math.min(Sp, yMax));
+    ctx.fillStyle = css('--accent');
+    ctx.beginPath(); ctx.arc(spx, spy, 5, 0, 2*Math.PI); ctx.fill();
+    ctx.strokeStyle = css('--card'); ctx.lineWidth = 2; ctx.stroke();
+
+    // measured real data point: 2.76x @ 16
+    var mx = X(MEAS.p), my = Y(Math.min(MEAS.s, yMax));
+    ctx.fillStyle = '#ea580c';
+    ctx.beginPath(); ctx.arc(mx, my, 6, 0, 2*Math.PI); ctx.fill();
+    ctx.strokeStyle = css('--card'); ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#ea580c'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('2.76× (measured)', mx+10, my);
+  }
+
+  function update(){
+    var s = parseFloat(sIn.value), p = parseInt(pIn.value, 10), showG = gIn.checked;
+    sVal.textContent = s.toFixed(3);
+    pVal.textContent = p;
+    var S = amdahl(s, p), E = eff(S, p);
+    rS.textContent = S.toFixed(2) + '×';
+    rE.textContent = (E * 100).toFixed(1) + '%';
+    rC.textContent = s > 0 ? (1/s).toFixed(1) + '×' : '∞ (s = 0)';
+    rGwrap.hidden = !showG; legG.hidden = !showG; legGt.hidden = !showG;
+    if (showG) rG.textContent = gustafson(s, p).toFixed(2) + '×';
+    draw(s, p, showG);
+  }
+
+  sIn.addEventListener('input', update);
+  pIn.addEventListener('input', update);
+  gIn.addEventListener('change', update);
+  update();
+})();
+</script>
 </body>
 </html>
