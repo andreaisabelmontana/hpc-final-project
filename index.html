@@ -114,6 +114,33 @@
 
 <section>
   <div class="wrap">
+    <p class="kicker">The vectorised kernel, up close</p>
+    <h2>How you vectorise an algorithm with a variable trip count</h2>
+    <p>Vectorising a fixed amount of arithmetic is easy. Mandelbrot is harder: <i>different pixels escape at different times</i>, so a plain "do <code>max_iter</code> passes over the whole grid" would keep iterating points that have already left the disc — and worse, those runaway values would not match the naive reference, which stops counting the moment a pixel escapes. The kernel solves this with a <b>boolean escape mask</b> instead of per-pixel branching.</p>
+    <pre>zr = zi = out = zeros(grid)            <span class="c"># real, imag, iteration count</span>
+for _ in range(max_iter):
+    mag2  = zr*zr + zi*zi
+    alive = mag2 &lt;= 4.0                 <span class="c"># pixels still inside |z| ≤ 2</span>
+    if not alive.any(): break          <span class="c"># everyone escaped → stop early</span>
+    out[alive] += 1                    <span class="c"># count one more step, survivors only</span>
+    new_zr = zr*zr - zi*zi + cr        <span class="c"># z = z² + c, on the whole grid</span>
+    new_zi = 2*zr*zi      + ci
+    zr = where(alive, new_zr, zr)      <span class="c"># freeze escaped pixels in place</span>
+    zi = where(alive, new_zi, zi)</pre>
+    <p>Three details make this both fast and <i>bit-for-bit identical</i> to the pure-Python loop:</p>
+    <ol class="flow">
+      <li><h3>The mask replaces the branch</h3><p><code>alive = mag2 &lt;= 4.0</code> is a full-grid boolean array. <code>out[alive] += 1</code> increments only the pixels that began this pass still bounded — mirroring exactly when the naive loop's <code>count += 1</code> runs, so the integer counts agree everywhere.</p></li>
+      <li><h3>Freeze, don't branch out</h3><p>NumPy can't <i>skip</i> escaped pixels — the array math runs over the whole grid every pass. So <code>np.where(alive, new_z, z)</code> keeps escaped pixels frozen at their last value: their result is already locked in, and freezing also dodges overflow warnings from <code>z²</code> on runaway points.</p></li>
+      <li><h3>Cheap early exit</h3><p>Once <code>alive.any()</code> is false every pixel has escaped, so the loop breaks before reaching <code>max_iter</code> — most views never run the full budget.</p></li>
+    </ol>
+    <div class="callout" style="margin-top:24px">
+      <p>This is the heart of why the speedups on this page are honest: the test suite asserts the vectorised and parallel kernels reproduce the naive array <b>exactly</b> (iteration counts are integers, so it's exact equality, not a tolerance). The same <code>_mandelbrot_numpy_block</code> is what each multiprocessing worker runs on its slab of rows — so parallel and serial share one code path and one correctness proof.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
     <p class="kicker">Profile first</p>
     <h2>The hotspot is exactly where you'd hope</h2>
     <p><code>cProfile</code> on the naive kernel is unambiguous: essentially <b>100% of the time is the per-pixel escape loop</b> in <code>mandelbrot_naive</code> — which is precisely the function the other three kernels replace.</p>
