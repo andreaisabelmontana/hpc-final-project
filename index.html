@@ -141,6 +141,30 @@ for _ in range(max_iter):
 
 <section>
   <div class="wrap">
+    <p class="kicker">The parallel kernel, up close</p>
+    <h2>How the work is split across processes</h2>
+    <p>Because every pixel is independent, the image needs no clever partitioning — any disjoint cover of the rows works. The kernel takes the simplest one: cut the grid into horizontal <b>row-bands</b>, hand each band to its own process, and stack the answers back. <code>np.array_split(np.arange(height), workers)</code> produces near-equal contiguous bands — when the rows don't divide evenly the band sizes differ by at most one row — so an 800-row image over 16 workers becomes sixteen 50-row slabs, each a self-contained sub-render.</p>
+    <pre>bands = np.array_split(np.arange(height), workers)   <span class="c"># near-equal row slabs</span>
+tasks = [(xs, ys[band], max_iter) for band in bands]
+ctx   = mp.get_context(<span class="c">"spawn"</span>)               <span class="c"># portable start method (Windows)</span>
+with ctx.Pool(processes=workers) as pool:
+    results = pool.map(_worker_rows, tasks)          <span class="c"># one band per process</span>
+return np.vstack(results)                            <span class="c"># re-stack, top to bottom</span></pre>
+    <p>A few details are what make this a clean, correct parallel decomposition rather than just "run it on more cores":</p>
+    <ol class="flow">
+      <li><h3>Each band carries its own slice of the plane</h3><p>A worker receives the shared real axis <code>xs</code> but only <i>its</i> rows of the imaginary axis, <code>ys[band]</code>. It runs the exact same <code>_mandelbrot_numpy_block</code> the serial path uses — there is no separate parallel maths to get wrong, which is why parallel output is bit-for-bit identical to naive.</p></li>
+      <li><h3>No communication during compute</h3><p>Rows never need each other's values, so once the bands are dealt out there is <i>zero</i> inter-process traffic until the end. The only data that crosses a process boundary is each band's finished result on the way back — the textbook embarrassingly-parallel shape.</p></li>
+      <li><h3>Picklable by construction</h3><p><code>_worker_rows</code> is a module-level function, not a closure or lambda, so the <code>spawn</code> start method (the only portable one on Windows) can import and call it in a fresh interpreter. Each band's inputs and result are plain NumPy arrays, which pickle cleanly across the pipe.</p></li>
+      <li><h3>Order-preserving reassembly</h3><p><code>pool.map</code> returns results in task order regardless of which process finishes first, so <code>np.vstack</code> rebuilds the image top-to-bottom with no bookkeeping. A dedicated test renders with four workers and asserts the stacked array equals the serial one — catching any band that lands in the wrong place.</p></li>
+    </ol>
+    <div class="callout" style="margin-top:24px">
+      <p>One deliberate shortcut: at <code>workers == 1</code> the kernel skips the pool entirely and calls the block function directly. That makes the single-worker time in the scaling table a true <i>serial</i> baseline — it pays none of the spawn-and-pickle tax, so the speedup ratios measure real parallel gain rather than flattering themselves against a pool-of-one.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
     <p class="kicker">Profile first</p>
     <h2>The hotspot is exactly where you'd hope</h2>
     <p><code>cProfile</code> on the naive kernel is unambiguous: essentially <b>100% of the time is the per-pixel escape loop</b> in <code>mandelbrot_naive</code> — which is precisely the function the other three kernels replace.</p>
@@ -155,7 +179,7 @@ for _ in range(max_iter):
   <div class="wrap">
     <p class="kicker">The evidence</p>
     <h2>Strong-scaling study — real numbers</h2>
-    <p>Fix the problem size (800×800, <code>max_iter=1000</code>), increase the worker processes, take the best of 3 runs after a warmup. Measured on a 16-core machine. <code>speedup = T(1)/T(p)</code>, <code>efficiency = speedup/p</code>.</p>
+    <p>This is a <b>strong-scaling</b> study: the problem size is held <i>fixed</i> (800×800, <code>max_iter=1000</code>) while the worker count grows — asking "given this exact image, how much faster do more cores make it?" (The complement, <b>weak scaling</b>, would grow the image <i>with</i> the cores to keep per-worker work constant; that's not what's measured here.) Each point is the best of 3 runs after a warmup. Measured on a 16-core machine. <code>speedup = T(1)/T(p)</code>, <code>efficiency = speedup/p</code> — ideal speedup is <code>p</code>, ideal efficiency 100%.</p>
     <table>
       <thead><tr><th>workers</th><th>time (s)</th><th>speedup</th><th>efficiency</th></tr></thead>
       <tbody>
@@ -172,6 +196,9 @@ for _ in range(max_iter):
     </div>
     <div class="callout" style="margin-top:24px">
       <p><b>Read honestly.</b> The speedup is real (2.76x on 16 cores) but plainly sub-linear, and efficiency collapses as cores are added. That's Amdahl's law: the fixed overhead of <i>this</i> setup — spawning processes, pickling each result band back, the final concatenation — is work a fast NumPy kernel finishes in seconds, so more processes hit diminishing returns fast. On Windows the only portable start method is <code>spawn</code>, whose per-process cost is high, which is why the knee comes early.</p>
+    </div>
+    <div class="callout" style="margin-top:18px">
+      <p><b>Amdahl's law, made concrete.</b> If a fraction <code>s</code> of the work is inherently serial, the best speedup on <code>p</code> workers is <code>S(p) = 1 / (s + (1 − s)/p)</code> — and as <code>p → ∞</code> it tops out at <code>1/s</code>, no matter how many cores you add. This study doesn't measure <code>s</code> directly, so as a purely illustrative number: <i>if</i> the serial part were 5% of the work, 16 cores would yield at most <code>1/(0.05 + 0.95/16) ≈ 9.1×</code>, with a hard ceiling of <code>1/0.05 = 20×</code>. The measured 2.76× sitting below even that hypothetical says the real serial-plus-overhead share here is larger still — exactly the diminishing-returns shape the curve shows.</p>
     </div>
   </div>
 </section>
